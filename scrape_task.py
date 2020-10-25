@@ -75,7 +75,7 @@ def add_wishlist_to_db(wishlist_list, db):
         else:
             entry["source_id"] = source["_id"]
             update_product(product, entry, db)
-            product_id = product._id
+            product_id = product["_id"]
         product_ids.append(product_id)
 
     db.wishlist.update_one({"_id": wishlist_id}, {"$set": {"product_ids": product_ids}})
@@ -122,6 +122,6 @@ def update_product(product_db, product_scraped, db):
                 key,
                 product_db["name"][:20],
                 product_db[key],
-                product_scraped[key],
+                int(100 * product_scraped[key]),
             )
-        db.product.update_one({"_id": product_db["id"]}, {"$set": product_updated})
+        db.product.update_one({"_id": product_db["_id"]}, {"$set": product_updated})
