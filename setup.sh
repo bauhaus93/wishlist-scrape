@@ -4,6 +4,5 @@ if [ ! -d 'venv' ]; then
 	python3 -mvenv venv
 fi
 
-source venv/bin/activate &&
-	pip install --upgrade pip &&
-	pip install -r requirements.txt
+venv/bin/pip install --upgrade pip &&
+	venv/bin/pip install -r requirements.txt
