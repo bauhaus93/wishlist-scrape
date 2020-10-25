@@ -31,7 +31,7 @@ def need_wishlist_update(wishlist, db):
     last_products = set(
         map(
             lambda p: (p["item_id"], p["price"], p["quantity"]),
-            db.product.find({"_id": {"$in": last_wishlist["product_ids"]}}),
+            db.product.find({"_id": {"$in": last_wishlist["products"]}}),
         )
     )
     new_products = set(
@@ -45,7 +45,7 @@ def add_wishlist_to_db(wishlist_list, db):
 
     value = int(sum(map(lambda e: e["price"] * e["quantity"], wishlist_list)) * 100.0)
     wishlist_id = db.wishlist.insert_one(
-        {"timestamp:": int(time.time()), "value": value, "product_ids": []}
+        {"timestamp:": int(time.time()), "value": value, "products": []}
     ).inserted_id
     product_ids = []
     for entry in wishlist_list:
@@ -66,19 +66,19 @@ def add_wishlist_to_db(wishlist_list, db):
                     "price": int(100.0 * entry["price"]),
                     "quantity": entry["quantity"],
                     "stars": int(10.0 * entry["stars"]),
-                    "url": entry["link"],
-                    "url_img": entry["img_link"],
+                    "url": entry["url"],
+                    "url_img": entry["url_img"],
                     "item_id": entry["item_id"],
-                    "source_id": source["_id"],
+                    "source": source["_id"],
                 }
             ).inserted_id
         else:
-            entry["source_id"] = source["_id"]
+            entry["source"] = source["_id"]
             update_product(product, entry, db)
             product_id = product["_id"]
         product_ids.append(product_id)
 
-    db.wishlist.update_one({"_id": wishlist_id}, {"$set": {"product_ids": product_ids}})
+    db.wishlist.update_one({"_id": wishlist_id}, {"$set": {"products": product_ids}})
     log.info("Added wishlist to database")
 
 
@@ -101,7 +101,7 @@ def update_products(products_scraped, db):
             ).inserted_id
         else:
             source_id = source["_id"]
-        product_scraped["source_id"] = source_id
+        product_scraped["source"] = source_id
         update_product(product, product_scraped, db)
 
 
@@ -111,7 +111,7 @@ def update_product(product_db, product_scraped, db):
         product_updated["price"] = int(100 * product_scraped["price"])
     if int(product_db["stars"] * 10) != int(product_scraped["stars"] * 10):
         product_db.stars = product_scraped["stars"]
-    string_fields = ["quantity", "url", "url_img", "item_id", "source_id"]
+    string_fields = ["quantity", "url", "url_img", "item_id", "source"]
     for field in string_fields:
         if product_db[field] != product_scraped[field]:
             product_updated[field] = product_scraped[field]
@@ -122,6 +122,6 @@ def update_product(product_db, product_scraped, db):
                 key,
                 product_db["name"][:20],
                 product_db[key],
-                int(100 * product_scraped[key]),
+                product_scraped[key],
             )
         db.product.update_one({"_id": product_db["_id"]}, {"$set": product_updated})
