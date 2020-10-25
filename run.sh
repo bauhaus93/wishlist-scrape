@@ -1,5 +1,3 @@
 #!/bin/sh
 
-FILE=$(realpath $0)
-DIR=${FILE%/*}
-$DIR/venv/bin/python3 main.py
+${0%/*}/venv/bin/python3 ${0%/*}/main.py
