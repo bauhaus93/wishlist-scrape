@@ -73,6 +73,7 @@ def add_wishlist_to_db(wishlist_list, db):
                 }
             ).inserted_id
         else:
+            entry["source_id"] = source["_id"]
             update_product(product, entry, db)
             product_id = product._id
         product_ids.append(product_id)
