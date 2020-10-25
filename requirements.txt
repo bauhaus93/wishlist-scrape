@@ -1,0 +1,6 @@
+requests
+BeautifulSoup4
+python-dotenv
+pytz
+pymongo
+dnspython
