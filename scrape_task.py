@@ -45,7 +45,7 @@ def add_wishlist_to_db(wishlist_list, db):
 
     value = int(sum(map(lambda e: e["price"] * e["quantity"], wishlist_list)) * 100.0)
     wishlist_id = db.wishlist.insert_one(
-        {"timestamp:": int(time.time()), "value": value, "products": []}
+        {"timestamp": int(time.time()), "value": value, "products": []}
     ).inserted_id
     product_ids = []
     for entry in wishlist_list:
