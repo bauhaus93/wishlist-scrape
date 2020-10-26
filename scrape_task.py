@@ -70,6 +70,7 @@ def add_wishlist_to_db(wishlist_list, db):
                     "url_img": entry["url_img"],
                     "item_id": entry["item_id"],
                     "source": source["_id"],
+                    "first_seen": int(time.time()),
                 }
             ).inserted_id
         else:
@@ -107,6 +108,9 @@ def update_products(products_scraped, db):
 
 def update_product(product_db, product_scraped, db):
     product_updated = {}
+
+    if product_db.get("first_seen", None) is None:
+        product_updated["first_seen"] = int(time.time())
     if product_db["price"] != int(product_scraped["price"] * 100):
         product_updated["price"] = int(100 * product_scraped["price"])
     if int(product_db["stars"] * 10) != int(product_scraped["stars"] * 10):
@@ -121,7 +125,7 @@ def update_product(product_db, product_scraped, db):
                 "Value '%s' of '%s[..]' changed: %s -> %s",
                 key,
                 product_db["name"][:20],
-                product_db[key],
-                product_scraped[key],
+                product_db.get(key, "None"),
+                product_scraped.get(key, "None"),
             )
         db.product.update_one({"_id": product_db["_id"]}, {"$set": product_updated})
