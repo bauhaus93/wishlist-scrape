@@ -116,7 +116,8 @@ def update_product(product_db, product_scraped, db):
 
     if product_db.get("first_seen", None) is None:
         product_updated["first_seen"] = int(time.time())
-    if product_db["price"] != int(product_scraped["price"] * 100):
+    scraped_price = int(product_scraped["price"] * 100)
+    if product_db["price"] != scraped_price and scraped_price > 0:
         product_updated["price"] = int(100 * product_scraped["price"])
     if int(product_db["stars"] * 10) != int(product_scraped["stars"] * 10):
         product_db.stars = product_scraped["stars"]
