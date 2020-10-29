@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from pymongo import MongoClient
 
 import logger
+from db_fixes import apply_fixes
 from scrape_task import update_wishlist_db
 
 if __name__ == "__main__":
@@ -21,4 +22,5 @@ if __name__ == "__main__":
     )
     client = MongoClient(os.getenv("DB_URL"))
     db = client.wishlist
+    apply_fixes(db)
     update_wishlist_db(db, scrape_urls)

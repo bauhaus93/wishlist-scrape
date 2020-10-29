@@ -44,8 +44,9 @@ def add_wishlist_to_db(wishlist_list, db):
     log.info("Adding wishlist to database...")
 
     value = int(sum(map(lambda e: e["price"] * e["quantity"], wishlist_list)) * 100.0)
+    wishlist_timestamp = int(time.time())
     wishlist_id = db.wishlist.insert_one(
-        {"timestamp": int(time.time()), "value": value, "products": []}
+        {"timestamp": wishlist_timestamp, "value": value, "products": []}
     ).inserted_id
     product_ids = []
     for entry in wishlist_list:
@@ -70,11 +71,13 @@ def add_wishlist_to_db(wishlist_list, db):
                     "url_img": entry["url_img"],
                     "item_id": entry["item_id"],
                     "source": source["_id"],
-                    "first_seen": int(time.time()),
+                    "first_seen": wishlist_timestamp,
+                    "last_seen": wishlist_timestamp,
                 }
             ).inserted_id
         else:
             entry["source"] = source["_id"]
+            entry["last_seen"] = wishlist_timestamp
             update_product(product, entry, db)
             product_id = product["_id"]
         product_ids.append(product_id)
@@ -84,6 +87,7 @@ def add_wishlist_to_db(wishlist_list, db):
 
 
 def update_products(products_scraped, db):
+    curr_time = int(time.time())
     for product_scraped in products_scraped:
         product = db.product.find_one({"item_id": product_scraped["item_id"]})
         if product is None:
@@ -103,6 +107,7 @@ def update_products(products_scraped, db):
         else:
             source_id = source["_id"]
         product_scraped["source"] = source_id
+        product_scraped["last_seen"] = curr_time
         update_product(product, product_scraped, db)
 
 
@@ -115,17 +120,18 @@ def update_product(product_db, product_scraped, db):
         product_updated["price"] = int(100 * product_scraped["price"])
     if int(product_db["stars"] * 10) != int(product_scraped["stars"] * 10):
         product_db.stars = product_scraped["stars"]
-    string_fields = ["quantity", "url", "url_img", "item_id", "source"]
+    string_fields = ["quantity", "url", "url_img", "item_id", "source", "last_seen"]
     for field in string_fields:
-        if product_db[field] != product_scraped[field]:
+        if product_db.get(field, None) != product_scraped[field]:
             product_updated[field] = product_scraped[field]
     if len(product_updated) > 0:
         for key in product_updated:
-            log.info(
-                "Value '%s' of '%s[..]' changed: %s -> %s",
-                key,
-                product_db["name"][:20],
-                product_db.get(key, "None"),
-                product_scraped.get(key, "None"),
-            )
+            if key != "last_seen":
+                log.info(
+                    "Value '%s' of '%s[..]' changed: %s -> %s",
+                    key,
+                    product_db["name"][:20],
+                    product_db.get(key, "None"),
+                    product_scraped.get(key, "None"),
+                )
         db.product.update_one({"_id": product_db["_id"]}, {"$set": product_updated})
