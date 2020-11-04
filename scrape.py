@@ -26,8 +26,12 @@ def scrape_wishlists(name_url_pairs):
 
 
 def get_page_content(url, tries, try_timeout):
+    # USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36/8mqQhSuL-09 "
+    USER_AGENT = (
+        "Mozilla/5.0 (compatible; Googlebot/2.1; startmebot/1.0; +https://start.me/bot)"
+    )
     for i in range(tries):
-        response = requests.get(url, headers={"User-Agent": os.getenv("USER_AGENT")})
+        response = requests.get(url, headers={"User-Agent": USER_AGENT})
         if response.status_code == 200:
             return response.text
         log.warning("Received http %d, try %d/%d", response.status_code, i + 1, tries)
@@ -46,7 +50,9 @@ def scrape_wishlist(url, wishlist_name, tries=5, try_timeout=3.0):
 
     soup = BeautifulSoup(content, "html.parser")
 
-    list_items = soup.find("ul", id="g-items")
+    list_items = soup.html.find("ul", id="g-items")
+    if list_items is None:
+        return []
 
     products = []
     for item in list_items.find_all("li"):
@@ -66,7 +72,6 @@ def scrape_wishlist(url, wishlist_name, tries=5, try_timeout=3.0):
 
     next_path = get_next_page_path(list_items)
     if next_path:
-        log.info("Found link to more items, following it")
         parsed_next = urlparse(next_path)
         next_url = urlunparse((*parsed_url[:2], *parsed_next[2:]))
         products.extend(scrape_wishlist(next_url, wishlist_name, tries, try_timeout))

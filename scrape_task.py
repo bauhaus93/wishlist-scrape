@@ -30,13 +30,15 @@ def need_wishlist_update(wishlist, db):
         return True
     last_products = set(
         map(
-            lambda p: (p["item_id"], p["price"], p["quantity"]),
-            db.product.find({"_id": {"$in": last_wishlist["products"]}}),
+            lambda p: p["item_id"],
+            db.product.find(
+                {"_id": {"$in": last_wishlist["products"]}},
+                {"item_id": True},
+            ),
         )
     )
-    new_products = set(
-        map(lambda p: (p["item_id"], int(p["price"] * 100), p["quantity"]), wishlist)
-    )
+    new_products = set(map(lambda p: p["item_id"], wishlist))
+
     return last_products != new_products
 
 
@@ -118,7 +120,7 @@ def update_product(product_db, product_scraped, db):
         product_updated["first_seen"] = int(time.time())
     scraped_price = int(product_scraped["price"] * 100)
     if product_db["price"] != scraped_price and scraped_price > 0:
-        product_updated["price"] = int(100 * product_scraped["price"])
+        product_updated["price"] = scraped_price
     if int(product_db["stars"] * 10) != int(product_scraped["stars"] * 10):
         product_db.stars = product_scraped["stars"]
     string_fields = ["quantity", "url", "url_img", "item_id", "source", "last_seen"]
