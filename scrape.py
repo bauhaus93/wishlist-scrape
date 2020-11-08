@@ -170,7 +170,7 @@ def get_item_stars(item):
     star_link_tag = item.find(
         lambda tag: tag.name == "a"
         and "reviewStarsPopoverLink" in tag.get("class", "")
-        and tag.get("aria-lable")
+        and tag.get("aria-label")
     )
     if not star_link_tag:
         return 0.0

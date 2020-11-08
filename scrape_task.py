@@ -121,7 +121,7 @@ def update_product(product_db, product_scraped, db):
     if product_db["price"] != scraped_price and scraped_price > 0:
         product_updated["price"] = scraped_price
     if int(product_db["stars"] * 10) != int(product_scraped["stars"] * 10):
-        product_db.stars = product_scraped["stars"]
+        product_updated["stars"] = product_scraped["stars"]
     string_fields = ["quantity", "url", "url_img", "item_id", "source", "last_seen"]
     for field in string_fields:
         if product_db.get(field, None) != product_scraped[field]:
