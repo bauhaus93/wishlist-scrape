@@ -41,7 +41,7 @@ def get_page_content(url, tries, try_timeout):
 
 
 def scrape_wishlist(url, wishlist_name, tries=5, try_timeout=3.0):
-    log.info("Scraping for wishlist '%s'", wishlist_name)
+    log.info("Scraping for wishlist '%s' at '%s'", wishlist_name, url)
     parsed_url = urlparse(url)
 
     content = get_page_content(url, tries, try_timeout)
@@ -50,7 +50,13 @@ def scrape_wishlist(url, wishlist_name, tries=5, try_timeout=3.0):
 
     soup = BeautifulSoup(content, "html.parser")
 
-    list_items = soup.html.find("ul", id="g-items")
+    try:
+        list_items = soup.html.find("ul", id="g-items")
+    except AttributeError:
+        try:
+            list_items = soup.find("ul", id="g-items")
+        except AttributeError:
+            list_items = None
     if list_items is None:
         log.error("Wishlist parsing error: Couldn't find listing with id 'g-items'")
         return []
@@ -61,6 +67,7 @@ def scrape_wishlist(url, wishlist_name, tries=5, try_timeout=3.0):
         if not product:
             log.error("Wishlist parsing error: Couldn't parse product info for item")
             return []
+        print(product)
         product = {
             **product,
             "source": url,
@@ -79,6 +86,12 @@ def scrape_wishlist(url, wishlist_name, tries=5, try_timeout=3.0):
         products.extend(scrape_wishlist(next_url, wishlist_name, tries, try_timeout))
 
     return products
+
+
+def alternative(soup):
+    list_items = soup.find("ul", id="g-items")
+    for item in list_items.find_all("li"):
+        print("ITEM")
 
 
 def collect_product_info(item):
@@ -124,7 +137,7 @@ def get_item_name(item):
         log.error("Could not find item name tag")
         return None
     try:
-        return item_name_tag.contents[0]
+        return item_name_tag.contents[0].strip()
     except IndexError:
         log.error("Item name tag has no content, full tag is '%s'", item_name_tag)
         return None
