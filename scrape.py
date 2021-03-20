@@ -52,12 +52,14 @@ def scrape_wishlist(url, wishlist_name, tries=5, try_timeout=3.0):
 
     list_items = soup.html.find("ul", id="g-items")
     if list_items is None:
+        log.error("Wishlist parsing error: Couldn't find listing with id 'g-items'")
         return []
 
     products = []
     for item in list_items.find_all("li"):
         product = collect_product_info(item)
         if not product:
+            log.error("Wishlist parsing error: Couldn't parse product info for item")
             return []
         product = {
             **product,
