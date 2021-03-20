@@ -67,7 +67,6 @@ def scrape_wishlist(url, wishlist_name, tries=5, try_timeout=3.0):
         if not product:
             log.error("Wishlist parsing error: Couldn't parse product info for item")
             return []
-        print(product)
         product = {
             **product,
             "source": url,
