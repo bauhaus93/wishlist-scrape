@@ -5,7 +5,6 @@ import os
 from dotenv import load_dotenv
 from pymongo import MongoClient
 
-import feed_sqlite
 import logger
 from db_fixes import apply_fixes
 from scrape_task import update_wishlist_db

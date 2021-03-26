@@ -201,7 +201,7 @@ def get_item_price(item):
         lambda tag: tag.name == "div" and "price-section" in tag.get("class", "")
     )
     if price_div is None:
-        log.info("Could not find price div in item")
+        log.warn("Could not find price div in item")
         return 0.0
     span_whole = price_div.find(
         lambda tag: tag.name == "span" and "a-price-whole" in tag.get("class", "")
@@ -210,11 +210,11 @@ def get_item_price(item):
         lambda tag: tag.name == "span" and "a-price-fraction" in tag.get("class", "")
     )
     if span_whole is None:
-        log.error("Could not find span of whole price in price section")
-        return None
+        log.warn("Could not find span of whole price in price section")
+        return 0.0
     if span_fraction is None:
-        log.error("Could not find span of fractional price in price section")
-        return None
+        log.warn("Could not find span of fractional price in price section")
+        return 0.0
     try:
         price_whole = int(span_whole.contents[0])
     except ValueError:
@@ -222,7 +222,7 @@ def get_item_price(item):
             "Could not convert price whole to integer, string was '%s'",
             span_fraction.string,
         )
-        return None
+        return 0.0
     try:
         price_fraction = int(span_fraction.contents[0])
     except ValueError:
@@ -230,5 +230,5 @@ def get_item_price(item):
             "Could not convert price fraction to integer, string was '%s'",
             span_fraction.string,
         )
-        return None
+        return 0.0
     return price_whole + price_fraction / 100.0
