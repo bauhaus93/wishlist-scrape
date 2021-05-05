@@ -19,7 +19,9 @@ def scrape_wishlists(name_url_pairs):
     wishlists = []
     for (name, url) in name_url_pairs:
         wishlist = scrape_wishlist(url, name)
-        if wishlist is None or len(wishlist) == 0:
+        if wishlist is None:
+            return None
+        elif len(wishlist) == 0:
             return []
         else:
             wishlists.extend(wishlist)
