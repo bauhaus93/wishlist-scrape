@@ -34,15 +34,15 @@ def get_page_content(url):
         "Mozilla/5.0 (compatible; Googlebot/2.1; startmebot/1.0; +https://start.me/bot)"
     )
     TRIES = 5
-    TRY_TIMOUT_INCREMENT = 5.0
-    timeout = 5.0
+    TRY_TIMEOUT_FACTOR = 2.0
+    timeout = 10.0
     for i in range(TRIES):
         response = requests.get(url, headers={"User-Agent": USER_AGENT})
         if response.status_code == 200:
             return response.text
         log.warning("Received http %d, try %d/%d", response.status_code, i + 1, TRIES)
         time.sleep(timeout)
-        timeout += TRY_TIMOUT_INCREMENT
+        timeout *= TRY_TIMEOUT_FACTOR
     log.error("Couldn't retrieve url after %d tries!", TRIES)
     return None
 
