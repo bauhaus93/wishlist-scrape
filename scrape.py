@@ -19,34 +19,39 @@ def scrape_wishlists(name_url_pairs):
     wishlists = []
     for (name, url) in name_url_pairs:
         wishlist = scrape_wishlist(url, name)
-        if len(wishlist) == 0:
+        if wishlist is None or len(wishlist) == 0:
             return []
-        wishlists.extend(wishlist)
+        else:
+            wishlists.extend(wishlist)
     return wishlists
 
 
-def get_page_content(url, tries, try_timeout):
+def get_page_content(url):
     # USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36/8mqQhSuL-09 "
     USER_AGENT = (
         "Mozilla/5.0 (compatible; Googlebot/2.1; startmebot/1.0; +https://start.me/bot)"
     )
-    for i in range(tries):
+    TRIES = 5
+    TRY_TIMOUT_INCREMENT = 5.0
+    timeout = 5.0
+    for i in range(TRIES):
         response = requests.get(url, headers={"User-Agent": USER_AGENT})
         if response.status_code == 200:
             return response.text
-        log.warning("Received http %d, try %d/%d", response.status_code, i + 1, tries)
-        time.sleep(try_timeout)
-    log.error("Couldn't retrieve url after %d tries!", tries)
+        log.warning("Received http %d, try %d/%d", response.status_code, i + 1, TRIES)
+        time.sleep(timeout)
+        timeout += TRY_TIMOUT_INCREMENT
+    log.error("Couldn't retrieve url after %d tries!", TRIES)
     return None
 
 
-def scrape_wishlist(url, wishlist_name, tries=5, try_timeout=3.0):
+def scrape_wishlist(url, wishlist_name):
     log.info("Scraping for wishlist '%s' at '%s'", wishlist_name, url)
     parsed_url = urlparse(url)
 
-    content = get_page_content(url, tries, try_timeout)
+    content = get_page_content(url)
     if not content:
-        return []
+        return None
 
     soup = BeautifulSoup(content, "html.parser")
 
@@ -82,7 +87,11 @@ def scrape_wishlist(url, wishlist_name, tries=5, try_timeout=3.0):
     if next_path:
         parsed_next = urlparse(next_path)
         next_url = urlunparse((*parsed_url[:2], *parsed_next[2:]))
-        products.extend(scrape_wishlist(next_url, wishlist_name, tries, try_timeout))
+        next_products = scrape_wishlist(next_url, wishlist_name)
+        if next_products is None:
+            return None
+        else:
+            products.extend(next_products)
 
     return products
 

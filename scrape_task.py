@@ -9,19 +9,28 @@ log = logger.get()
 
 
 def update_wishlist_db(db, url_pairs):
+    TRY_COUNT = 5
+    TRY_TIMEOUT = 2.0 * 60.0
+
     log.info("Start scraping of wishlists...")
-    wishlist = scrape_wishlists(url_pairs)
-    if len(wishlist) == 0:
-        log.error("Couldn't scrape wishlists!")
-        return
-    log.info("Wishlists successfully scraped, found %d products!", len(wishlist))
-    if need_wishlist_update(wishlist, db):
-        log.info("Wishlist changed, add new one")
-        add_wishlist_to_db(wishlist, db)
-    else:
-        log.info("Wishlist didn't change, only check for product updates")
-        update_products(wishlist, db)
-        log.info("Updated products!")
+    for i in range(TRY_COUNT):
+        wishlist = scrape_wishlists(url_pairs)
+        if wishlist is None:
+            log.error(f"Couldn't scrape wishlists, try %{i + 1}/{TRY_COUNT}")
+            time.sleep(TRY_TIMEOUT)
+            continue
+        else:
+            log.info(
+                "Wishlists successfully scraped, found %d products!", len(wishlist)
+            )
+            if need_wishlist_update(wishlist, db):
+                log.info("Wishlist changed, add new one")
+                add_wishlist_to_db(wishlist, db)
+            else:
+                log.info("Wishlist didn't change, only check for product updates")
+                update_products(wishlist, db)
+                log.info("Updated products!")
+            break
 
 
 def need_wishlist_update(wishlist, db):
