@@ -40,9 +40,16 @@ def get_page_content(url):
         response = requests.get(url, headers={"User-Agent": USER_AGENT})
         if response.status_code == 200:
             return response.text
-        log.warning("Received http %d, try %d/%d", response.status_code, i + 1, TRIES)
-        time.sleep(timeout)
-        timeout *= TRY_TIMEOUT_FACTOR
+        if i + 1 != TRIES:
+            log.warning(
+                "Received http %d, try %d/%d, sleeping %ds",
+                response.status_code,
+                i + 1,
+                TRIES,
+                int(timeout),
+            )
+            time.sleep(timeout)
+            timeout *= TRY_TIMEOUT_FACTOR
     log.error("Couldn't retrieve url after %d tries!", TRIES)
     return None
 
