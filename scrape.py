@@ -21,6 +21,9 @@ def scrape_wishlists(name_url_pairs):
         wishlist = scrape_wishlist(url, name)
         if wishlist is not None:
             wishlists.extend(wishlist)
+        else:
+            log.error("Wishlist scrape for '%s' returned None, aborting", name)
+            return None
     return wishlists
 
 
@@ -29,24 +32,25 @@ def get_page_content(url):
     USER_AGENT = (
         "Mozilla/5.0 (compatible; Googlebot/2.1; startmebot/1.0; +https://start.me/bot)"
     )
-    TRIES = 5
-    TRY_TIMEOUT_FACTOR = 2.0
-    timeout = 10.0
-    for i in range(TRIES):
+    MAX_TRIES = 5
+    MIN_TIME = 30
+    MAX_TIME = 20 * 60
+    TIMEOUTS = range(MIN_TIME, MAX_TIME, (MAX_TIME - MIN_TIME) // MAX_TRIES)
+    for i in range(MAX_TRIES):
         response = requests.get(url, headers={"User-Agent": USER_AGENT})
         if response.status_code == 200:
             return response.text
-        if i + 1 != TRIES:
+        if i + 1 != MAX_TRIES:
+            timeout = TIMEOUTS[i] if i < len(TIMEOUTS) else MAX_TIME
             log.warning(
                 "Received http %d, try %d/%d, sleeping %ds",
                 response.status_code,
                 i + 1,
-                TRIES,
+                MAX_TRIES,
                 int(timeout),
             )
             time.sleep(timeout)
-            timeout *= TRY_TIMEOUT_FACTOR
-    log.error("Couldn't retrieve url after %d tries!", TRIES)
+    log.error("Couldn't retrieve url after %d tries!", MAX_TRIES)
     return None
 
 
